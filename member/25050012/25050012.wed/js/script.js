@@ -1,91 +1,145 @@
-// Menu mobile
-const menuToggle = document.getElementById("menuToggle");
-const navLinks = document.getElementById("navLinks");
-const navItems = document.querySelectorAll(".nav-link");
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Quản lý Theme Sáng / Tối (Dark / Light Mode)
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    
+    // Mặc định cài đặt chế độ Dark cho phong cách AI hiện đại
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcon(savedTheme);
 
-menuToggle.addEventListener("click", () => {
-  const isOpen = navLinks.classList.toggle("open");
-  menuToggle.setAttribute("aria-expanded", String(isOpen));
-  menuToggle.setAttribute("aria-label", isOpen ? "Đóng menu" : "Mở menu");
-});
+    themeToggleBtn.addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon(newTheme);
+    });
 
-navItems.forEach((link) => {
-  link.addEventListener("click", () => {
-    navLinks.classList.remove("open");
-    menuToggle.setAttribute("aria-expanded", "false");
-  });
-});
-
-// Hiệu ứng chữ thay đổi ở trang chủ
-const typingText = document.getElementById("typingText");
-const phrases = ["sinh viên IT", "người yêu công nghệ", "người thích khám phá"];
-let phraseIndex = 0;
-let charIndex = 0;
-let deleting = false;
-
-function typeEffect() {
-  const current = phrases[phraseIndex];
-  typingText.textContent = current.substring(0, charIndex);
-  if (!deleting && charIndex < current.length) {
-    charIndex++;
-    setTimeout(typeEffect, 95);
-  } else if (deleting && charIndex > 0) {
-    charIndex--;
-    setTimeout(typeEffect, 45);
-  } else {
-    deleting = !deleting;
-    if (!deleting) phraseIndex = (phraseIndex + 1) % phrases.length;
-    setTimeout(typeEffect, 850);
-  }
-}
-typeEffect();
-
-// Hiện nội dung khi cuộn đến
-const revealObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add("visible");
-      revealObserver.unobserve(entry.target);
+    function updateThemeIcon(theme) {
+        if (theme === 'dark') {
+            themeIcon.className = 'fas fa-sun';
+        } else {
+            themeIcon.className = 'fas fa-moon';
+        }
     }
-  });
-}, { threshold: 0.12 });
 
-document.querySelectorAll(".reveal").forEach((element) => revealObserver.observe(element));
+    // 2. Menu Mobile Hamburger
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('navLinks');
 
-// Đánh dấu mục menu đang xem và nút lên đầu trang
-const sections = document.querySelectorAll("main section[id]");
-const toTop = document.getElementById("toTop");
+    hamburger.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+    });
 
-window.addEventListener("scroll", () => {
-  let currentId = "home";
-  sections.forEach((section) => {
-    if (window.scrollY >= section.offsetTop - 160) currentId = section.id;
-  });
+    document.querySelectorAll('.nav-item').forEach(link => {
+        link.addEventListener('click', () => {
+            navLinks.classList.remove('active');
+        });
+    });
 
-  navItems.forEach((link) => {
-    link.classList.toggle("active", link.getAttribute("href") === `#${currentId}`);
-  });
+    // 3. Lọc dự án (Project Filter)
+    const filterBtns = document.querySelectorAll('.filter-btn');
+    const projectCards = document.querySelectorAll('.project-card');
 
-  toTop.classList.toggle("visible", window.scrollY > 500);
+    filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const filterValue = btn.getAttribute('data-filter');
+
+            projectCards.forEach(card => {
+                if (filterValue === 'all' || card.getAttribute('data-category') === filterValue) {
+                    card.style.display = 'block';
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 50);
+                } else {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        card.style.display = 'none';
+                    }, 300);
+                }
+            });
+        });
+    });
+
+    // 4. Kiểm tra dữ liệu Form Liên hệ (Form Validation)
+    const contactForm = document.getElementById('contactForm');
+    const formSuccess = document.getElementById('formSuccess');
+
+    contactForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        let isValid = true;
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const subjectInput = document.getElementById('subject');
+        const messageInput = document.getElementById('message');
+
+        document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+
+        if (nameInput.value.trim() === '') {
+            document.getElementById('nameError').textContent = 'Vui lòng nhập họ và tên của bạn.';
+            isValid = false;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (emailInput.value.trim() === '') {
+            document.getElementById('emailError').textContent = 'Vui lòng nhập địa chỉ email.';
+            isValid = false;
+        } else if (!emailRegex.test(emailInput.value.trim())) {
+            document.getElementById('emailError').textContent = 'Địa chỉ email không chính xác.';
+            isValid = false;
+        }
+
+        if (subjectInput.value.trim() === '') {
+            document.getElementById('subjectError').textContent = 'Vui lòng nhập chủ đề.';
+            isValid = false;
+        }
+
+        if (messageInput.value.trim() === '') {
+            document.getElementById('messageError').textContent = 'Vui lòng nhập nội dung tin nhắn.';
+            isValid = false;
+        }
+
+        if (isValid) {
+            formSuccess.style.display = 'block';
+            contactForm.reset();
+            setTimeout(() => {
+                formSuccess.style.display = 'none';
+            }, 5000);
+        }
+    });
+
+    // 5. Scroll to Top
+    const scrollToTopBtn = document.getElementById('scrollToTop');
+    scrollToTopBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+
+    // 6. Hiệu ứng Cuộn Mượt Tự Động (Scroll Reveal)
+    const revealElements = document.querySelectorAll('.reveal');
+
+    function checkReveal() {
+        const windowHeight = window.innerHeight;
+        const revealPoint = 80;
+
+        revealElements.forEach(el => {
+            const elementTop = el.getBoundingClientRect().top;
+            if (elementTop < windowHeight - revealPoint) {
+                el.classList.add('active');
+            }
+        });
+    }
+
+    window.addEventListener('scroll', checkReveal);
+    checkReveal();
 });
-
-toTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-
-// Form demo: mở ứng dụng email mặc định, không tự gửi dữ liệu lên máy chủ
-const contactForm = document.getElementById("contactForm");
-const formNote = document.getElementById("formNote");
-
-contactForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const name = document.getElementById("visitorName").value.trim();
-  const email = document.getElementById("visitorEmail").value.trim();
-  const message = document.getElementById("visitorMessage").value.trim();
-
-  const subject = encodeURIComponent(`Lời nhắn từ ${name}`);
-  const body = encodeURIComponent(`Xin chào Trần Gia Huy,\n\n${message}\n\nNgười gửi: ${name}\nEmail: ${email}`);
-  window.location.href = `mailto:your.email@example.com?subject=${subject}&body=${body}`;
-  formNote.textContent = "Đã mở ứng dụng email. Hãy thay địa chỉ email mẫu trong mã nguồn bằng email thật của bạn.";
-});
-
-// Năm hiện tại ở chân trang
-document.getElementById("year").textContent = new Date().getFullYear();
